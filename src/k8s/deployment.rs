@@ -1,10 +1,10 @@
+use super::commons::{map_to_table_value, ContainerManager, HPATarget, PrintResources};
+use crate::k8s::commons::Metadata;
+use crate::k8s::pod::{Container, PodTemplate};
 use comfy_table::Table;
-use serde::{Deserialize};
-use crate::k8s::pod::{PodTemplate, Container};
-use crate::k8s::commons::{Metadata};
-use super::commons::{ContainerManager, PrintResources, HPATarget, map_to_table_value};
+use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Deployment {
     pub kind: String,
@@ -12,7 +12,7 @@ pub struct Deployment {
     pub spec: DeploymentSpec,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeploymentSpec {
     pub replicas: u32,
@@ -30,16 +30,15 @@ impl ContainerManager for Deployment {
 
 impl PrintResources for Deployment {
     fn print_resources(&self, table: &mut Table) {
-        table
-        .add_row(vec![
-            format!("{} (x{})", self.metadata.name, self.spec.replicas), 
-            String::from("Deployment"), 
-            self.replicas().to_string(), 
-            map_to_table_value(&self.requests_cpu(None)), 
-            map_to_table_value(&self.limits_cpu(None)), 
-            map_to_table_value(&self.requests_memory(None)), 
-            map_to_table_value(&self.limits_memory(None)), 
-            ]);
+        table.add_row(vec![
+            format!("{} (x{})", self.metadata.name, self.spec.replicas),
+            String::from("Deployment"),
+            self.replicas().to_string(),
+            map_to_table_value(&self.requests_cpu(None)),
+            map_to_table_value(&self.limits_cpu(None)),
+            map_to_table_value(&self.requests_memory(None)),
+            map_to_table_value(&self.limits_memory(None)),
+        ]);
         for container in &self.spec.template.spec.containers {
             container.print_resources(table);
         }
@@ -54,4 +53,3 @@ impl HPATarget for Deployment {
         &self.kind
     }
 }
-    

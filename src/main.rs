@@ -1,14 +1,13 @@
-mod k8s;
 mod depres;
+mod k8s;
 
-use std::{fs, path::PathBuf};
-use depres::depres;
 use clap::Parser;
+use depres::depres;
+use std::{fs, path::PathBuf};
 
-
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[command(name = "k8sdr")]
-#[command(about = "A tool to parse and sum resources from multiple k8s deployment files", long_about = None)]
+#[command(about = "K8s deployment resource aggregator", long_about = None)]
 struct Cli {
     /// Paths to the files to process
     #[arg(required = true)]
@@ -21,10 +20,7 @@ fn main() {
     let mut contents: Vec<String> = Vec::new();
 
     for file in args.files {
-        contents.push(
-            fs::read_to_string(file)
-                .expect("Failed to read the file")
-        );
+        contents.push(fs::read_to_string(file).expect("Failed to read the file"));
     }
 
     if let Err(error) = depres(contents) {

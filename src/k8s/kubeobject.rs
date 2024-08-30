@@ -1,7 +1,10 @@
-use serde::{Deserialize};
-use crate::k8s::{hpa::HorizontalPodAutoscaler, pvc::PersistentVolumeClaim, cronjob::CronJob, statefulset::StatefulSet, deployment::Deployment};
+use crate::k8s::{
+    cronjob::CronJob, deployment::Deployment, hpa::HorizontalPodAutoscaler,
+    pvc::PersistentVolumeClaim, statefulset::StatefulSet,
+};
+use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 #[serde(untagged)]
 pub enum KubeObject {
     StatefulSet(StatefulSet),

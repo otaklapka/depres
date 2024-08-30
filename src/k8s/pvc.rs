@@ -1,33 +1,33 @@
+use crate::k8s::commons::{map_to_table_value, parse_memory_str_to_mib, Metadata};
 use comfy_table::Table;
-use serde::{Deserialize};
-use crate::k8s::commons::{Metadata, parse_memory_str_to_mib, map_to_table_value};
+use serde::Deserialize;
 
 use super::commons::PrintResources;
 
-#[derive(Debug,  Deserialize)]
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PersistentVolumeClaim {
     pub metadata: Metadata,
     pub spec: PersistentVolumeClaimSpec,
 }
 
-#[derive(Debug,  Deserialize)]
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PersistentVolumeClaimSpec {
-    pub resources: PvcResourceRequirements
+    pub resources: PvcResourceRequirements,
 }
 
-#[derive(Debug,  Deserialize)]
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PvcResourceRequirements {
     pub requests: PvcResourceDefinition,
-    pub limits: Option<PvcResourceDefinition>
+    pub limits: Option<PvcResourceDefinition>,
 }
 
-#[derive(Debug,  Deserialize)]
+#[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PvcResourceDefinition {
-    pub storage: String
+    pub storage: String,
 }
 
 impl PersistentVolumeClaim {
@@ -42,18 +42,16 @@ impl PersistentVolumeClaim {
 
 impl PrintResources for PersistentVolumeClaim {
     fn print_resources(&self, table: &mut Table) {
-        
-        table
-        .add_row(vec![
-            format!("  {}", self.metadata.name),  
-            String::from("PVC"), 
+        table.add_row(vec![
+            format!("  {}", self.metadata.name),
+            String::from("PVC"),
             String::from(""),
             String::from(""),
-            String::from(""),  
-            String::from(""),  
-            String::from(""),  
-            map_to_table_value(&self.requests_storage()), 
-            map_to_table_value(&self.limits_storage()), 
-            ]);
+            String::from(""),
+            String::from(""),
+            String::from(""),
+            map_to_table_value(&self.requests_storage()),
+            map_to_table_value(&self.limits_storage()),
+        ]);
     }
 }
