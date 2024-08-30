@@ -1,5 +1,6 @@
 use std::iter::Sum;
 
+#[derive(Debug, PartialEq)]
 pub struct ResourceUsage {
     pub requests_cpu: Option<f64>,
     pub limits_cpu: Option<f64>,

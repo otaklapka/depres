@@ -6,7 +6,9 @@ use crate::k8s::{
 use comfy_table::{Attribute, Cell, Table};
 use serde::Deserialize;
 
-pub fn depres(file_contents: Vec<String>) -> Result<ResourceUsage, serde_yaml::Error> {
+pub fn read_deployment_resources(
+    file_contents: Vec<String>,
+) -> Result<ResourceUsage, serde_yaml::Error> {
     let mut kube_objects: Vec<KubeObject> = vec![];
     let mut hpas: Vec<HorizontalPodAutoscaler> = vec![];
 
@@ -88,5 +90,5 @@ pub fn depres(file_contents: Vec<String>) -> Result<ResourceUsage, serde_yaml::E
 
     println!("{table}");
 
-    Ok((resources))
+    Ok(resources)
 }

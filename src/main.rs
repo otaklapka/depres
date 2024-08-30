@@ -2,12 +2,12 @@ mod depres;
 mod k8s;
 
 use clap::Parser;
-use depres::depres;
+use depres::read_deployment_resources;
 use std::{fs, path::PathBuf};
 
 #[derive(Parser)]
 #[command(name = "depres")]
-#[command(about = "K8s deployment resource aggregator", long_about = None)]
+#[command(about = "K8s deployment resources aggregator", long_about = None)]
 struct Cli {
     #[arg(required = true)]
     files: Vec<PathBuf>,
@@ -22,7 +22,7 @@ fn main() {
         contents.push(fs::read_to_string(file).expect("Failed to read the file"));
     }
 
-    if let Err(error) = depres(contents) {
+    if let Err(error) = read_deployment_resources(contents) {
         println!("{:?}", error)
     }
 }
