@@ -23,6 +23,6 @@ fn main() {
     }
 
     if let Err(error) = read_deployment_resources(contents) {
-        println!("{:?}", error)
+        println!("{:?}", error);
     }
 }
