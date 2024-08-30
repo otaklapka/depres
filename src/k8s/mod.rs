@@ -1,8 +1,9 @@
 pub mod commons;
-pub mod cronjob;
+pub mod cron_job;
 pub mod deployment;
 pub mod hpa;
-pub mod kubeobject;
+pub mod kube_object;
 pub mod pod;
 pub mod pvc;
-pub mod statefulset;
+pub mod resources_usage;
+pub mod stateful_set;

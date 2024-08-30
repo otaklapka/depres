@@ -2,7 +2,7 @@ use crate::k8s::commons::Metadata;
 use comfy_table::Table;
 use serde::Deserialize;
 
-use super::commons::{HPATarget, PrintResources};
+use super::commons::HPATarget;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,10 +31,8 @@ impl HorizontalPodAutoscaler {
         &self.spec.scale_target_ref.kind == target.kind()
             && &self.spec.scale_target_ref.name == target.name()
     }
-}
 
-impl PrintResources for HorizontalPodAutoscaler {
-    fn print_resources(&self, table: &mut Table) {
+    pub fn print_resources(&self, table: &mut Table) {
         table.add_row(vec![
             &self.metadata.name,
             &String::from("HPA"),

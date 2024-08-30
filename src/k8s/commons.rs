@@ -1,5 +1,3 @@
-use crate::k8s::pod::Container;
-use comfy_table::Table;
 use regex::Regex;
 use serde::Deserialize;
 
@@ -7,6 +5,11 @@ use serde::Deserialize;
 #[serde(rename_all = "camelCase")]
 pub struct Metadata {
     pub name: String,
+}
+
+pub trait HPATarget {
+    fn name(&self) -> &String;
+    fn kind(&self) -> &String;
 }
 
 pub fn parse_memory_str_to_mib(res: &str) -> Option<f64> {
@@ -44,81 +47,4 @@ pub fn parse_cpu_str_to_base(res: &str) -> Option<f64> {
         }
     }
     None
-}
-
-pub trait ContainerManager {
-    fn replicas(&self) -> u32;
-    fn containers(&self) -> &Vec<Container>;
-
-    fn limits_cpu(&self, multiplier: Option<u32>) -> Option<f64> {
-        let mut cpu_sum: f64 = 0.0;
-        for container in self.containers() {
-            if let Some(limits_cpu) = container.limits_cpu() {
-                cpu_sum += limits_cpu;
-            }
-        }
-
-        if cpu_sum > 0.0 {
-            return Some(cpu_sum * multiplier.unwrap_or(self.replicas()) as f64);
-        }
-        None
-    }
-
-    fn limits_memory(&self, multiplier: Option<u32>) -> Option<f64> {
-        let mut memory_sum: f64 = 0.0;
-        for container in self.containers() {
-            if let Some(limits_memory) = container.limits_memory() {
-                memory_sum += limits_memory;
-            }
-        }
-
-        if memory_sum > 0.0 {
-            return Some(memory_sum * multiplier.unwrap_or(self.replicas()) as f64);
-        }
-        None
-    }
-
-    fn requests_cpu(&self, multiplier: Option<u32>) -> Option<f64> {
-        let mut cpu_sum: f64 = 0.0;
-        for container in self.containers() {
-            if let Some(requests_cpu) = container.requests_cpu() {
-                cpu_sum += requests_cpu;
-            }
-        }
-
-        if cpu_sum > 0.0 {
-            return Some(cpu_sum * multiplier.unwrap_or(self.replicas()) as f64);
-        }
-        None
-    }
-
-    fn requests_memory(&self, multiplier: Option<u32>) -> Option<f64> {
-        let mut memory_sum: f64 = 0.0;
-        for container in self.containers() {
-            if let Some(requests_memory) = container.requests_memory() {
-                memory_sum += requests_memory;
-            }
-        }
-
-        if memory_sum > 0.0 {
-            return Some(memory_sum * multiplier.unwrap_or(self.replicas()) as f64);
-        }
-        None
-    }
-}
-
-pub trait PrintResources {
-    fn print_resources(&self, table: &mut Table);
-}
-
-pub trait HPATarget {
-    fn name(&self) -> &String;
-    fn kind(&self) -> &String;
-}
-
-pub fn map_to_table_value(val: &Option<impl ToString>) -> String {
-    if let Some(val) = val {
-        return val.to_string();
-    }
-    String::new()
 }

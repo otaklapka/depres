@@ -1,11 +1,12 @@
+use crate::k8s::kube_object::{KubeObject, ObjectManager};
 use crate::k8s::{
-    commons::ContainerManager, commons::PrintResources, hpa::HorizontalPodAutoscaler,
-    kubeobject::KubeObject,
+    hpa::HorizontalPodAutoscaler,
+    resources_usage::{ResourceUsage, ToComfyTableValue},
 };
 use comfy_table::{Attribute, Cell, Table};
 use serde::Deserialize;
 
-pub fn depres(file_contents: Vec<String>) -> Result<(), serde_yaml::Error> {
+pub fn depres(file_contents: Vec<String>) -> Result<ResourceUsage, serde_yaml::Error> {
     let mut kube_objects: Vec<KubeObject> = vec![];
     let mut hpas: Vec<HorizontalPodAutoscaler> = vec![];
 
@@ -20,12 +21,7 @@ pub fn depres(file_contents: Vec<String>) -> Result<(), serde_yaml::Error> {
         }
     }
 
-    let mut total_request_memory: f64 = 0.0;
-    let mut total_request_cpu: f64 = 0.0;
-    let mut total_limit_memory: f64 = 0.0;
-    let mut total_limit_cpu: f64 = 0.0;
-    let mut total_request_storage: f64 = 0.0;
-    let mut total_limit_storage: f64 = 0.0;
+    let mut resources = ResourceUsage::new();
 
     let mut table = Table::new();
     table
@@ -48,48 +44,31 @@ pub fn depres(file_contents: Vec<String>) -> Result<(), serde_yaml::Error> {
                 let hpa = hpas.iter().find(|hpa| hpa.try_match(statefulset));
                 let hpa_max_replicas = hpa.and_then(|hpa| Some(hpa.spec.max_replicas));
 
+                resources += statefulset.resources_usage(hpa_max_replicas);
+
                 if let Some(hpa) = hpa {
                     hpa.print_resources(&mut table)
                 }
                 statefulset.print_resources(&mut table);
-
-                total_limit_cpu += statefulset.limits_cpu(hpa_max_replicas).unwrap_or(0.0);
-                total_limit_memory += statefulset.limits_memory(hpa_max_replicas).unwrap_or(0.0);
-                total_request_cpu += statefulset.requests_cpu(hpa_max_replicas).unwrap_or(0.0);
-                total_request_memory +=
-                    statefulset.requests_memory(hpa_max_replicas).unwrap_or(0.0);
-                total_limit_storage += statefulset.limits_storage(hpa_max_replicas).unwrap_or(0.0);
-                total_request_storage += statefulset
-                    .requests_storage(hpa_max_replicas)
-                    .unwrap_or(0.0);
             }
             KubeObject::Deployment(deployment) => {
                 let hpa = hpas.iter().find(|hpa| hpa.try_match(deployment));
                 let hpa_max_replicas = hpa.and_then(|hpa| Some(hpa.spec.max_replicas));
 
+                resources += deployment.resources_usage(hpa_max_replicas);
+
                 if let Some(hpa) = hpa {
                     hpa.print_resources(&mut table);
                 }
                 deployment.print_resources(&mut table);
-
-                total_limit_cpu += deployment.limits_cpu(hpa_max_replicas).unwrap_or(0.0);
-                total_limit_memory += deployment.limits_memory(hpa_max_replicas).unwrap_or(0.0);
-                total_request_cpu += deployment.requests_cpu(hpa_max_replicas).unwrap_or(0.0);
-                total_request_memory += deployment.requests_memory(hpa_max_replicas).unwrap_or(0.0);
             }
             KubeObject::CronJob(cronjob) => {
+                resources += cronjob.resources_usage(None);
                 cronjob.print_resources(&mut table);
-
-                total_limit_cpu += cronjob.limits_cpu(None).unwrap_or(0.0);
-                total_limit_memory += cronjob.limits_memory(None).unwrap_or(0.0);
-                total_request_cpu += cronjob.requests_cpu(None).unwrap_or(0.0);
-                total_request_memory += cronjob.requests_memory(None).unwrap_or(0.0);
             }
             KubeObject::PersistentVolumeClaim(pvc) => {
+                resources += pvc.resources_usage();
                 pvc.print_resources(&mut table);
-
-                total_limit_storage += pvc.limits_storage().unwrap_or(0.0);
-                total_request_storage += pvc.requests_storage().unwrap_or(0.0);
             }
             _ => {}
         }
@@ -99,15 +78,15 @@ pub fn depres(file_contents: Vec<String>) -> Result<(), serde_yaml::Error> {
         "Total",
         "",
         "",
-        &total_request_cpu.to_string(),
-        &total_limit_cpu.to_string(),
-        &total_request_memory.to_string(),
-        &total_limit_memory.to_string(),
-        &total_request_storage.to_string(),
-        &total_limit_storage.to_string(),
+        &resources.requests_cpu.to_comfy_table_value(),
+        &resources.limits_cpu.to_comfy_table_value(),
+        &resources.requests_memory.to_comfy_table_value(),
+        &resources.limits_memory.to_comfy_table_value(),
+        &resources.requests_storage.to_comfy_table_value(),
+        &resources.limits_storage.to_comfy_table_value(),
     ]);
 
     println!("{table}");
 
-    Ok(())
+    Ok((resources))
 }

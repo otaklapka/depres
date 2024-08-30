@@ -6,10 +6,9 @@ use depres::depres;
 use std::{fs, path::PathBuf};
 
 #[derive(Parser)]
-#[command(name = "k8sdr")]
+#[command(name = "depres")]
 #[command(about = "K8s deployment resource aggregator", long_about = None)]
 struct Cli {
-    /// Paths to the files to process
     #[arg(required = true)]
     files: Vec<PathBuf>,
 }
